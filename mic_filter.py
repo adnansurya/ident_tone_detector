@@ -7,6 +7,9 @@ samplerate = 44100  # Frekuensi sampling
 lowcut = 1015       # Batas bawah frekuensi (Hz)
 highcut = 1025      # Batas atas frekuensi (Hz)
 
+tone_treshold = -90
+ident_counter = 0
+
 # Fungsi untuk membuat bandpass filter
 def bandpass_filter(data, lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
@@ -33,10 +36,17 @@ def monitor_microphone():
         # Hitung RMS dan dB dari sinyal yang telah difilter
         rms = np.sqrt(np.mean(np.square(filtered_data)))
         db = 20 * np.log10(rms) if rms > 0 else -np.inf
+        
 
         # Tampilkan setiap 10 pengukuran
-        if measurement_counter % 10 == 0 and db >= 7:
+        if measurement_counter % 10 == 0 :
+            global tone_treshold
             print(f"Realtime dB pada frekuensi 1020 Hz: {db:.2f} dB")
+            if db >= tone_treshold:
+                global ident_counter
+                ident_counter += 1
+                print("Ada Ident : " + str(ident_counter))
+                
         measurement_counter += 1
 
     # Buka stream mikrofon
