@@ -26,13 +26,16 @@ FirebaseAuth auth;
 /* Define the FirebaseConfig data for config data */
 FirebaseConfig config;
 
-unsigned long dataMillis = 0;
-int count = 0;
+bool identOK = false;
+bool lastIdent = false;
+
+unsigned long timeoutSeconds = 10;
+unsigned long lastIdentTime = 0;
 
 
 void setup() {
 
-  Serial.begin(115200);
+  Serial.begin(9600);
 
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -57,13 +60,6 @@ void setup() {
 
   config.signer.test_mode = true;
 
-  // The WiFi credentials are required for Pico W
-  // due to it does not have reconnect feature.
-#if defined(ARDUINO_RASPBERRY_PI_PICO_W)
-  config.wifi.clearAP();
-  config.wifi.addAP(WIFI_SSID, WIFI_PASSWORD);
-#endif
-
   // Comment or pass false value when WiFi reconnection will control by your code or third party library e.g. WiFiManager
   Firebase.reconnectNetwork(true);
 
@@ -79,8 +75,48 @@ void setup() {
 }
 
 void loop() {
-  if (millis() - dataMillis > 5000) {
-    dataMillis = millis();
-    Serial.printf("Set int... %s\n", Firebase.RTDB.setInt(&fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
+
+  if (Serial.available() > 0) {
+    String serialData = Serial.readStringUntil('\n');
+    serialData.trim();
+    Serial.print("Received Text: ");
+    Serial.println(serialData);
+    if (serialData.indexOf("ident") > -1) {
+      Serial.println("Ident On");
+      lastIdentTime = millis();
+      identOK = true;
+    }
+  }
+  delay(100);
+
+  if (identOK == true) {
+    if (millis() - lastIdentTime >= timeoutSeconds * 1000) {
+      Serial.println("Ident Off");
+      identOK = false;      
+    }
+  }
+
+  if(lastIdent != identOK){
+    if(identOK){
+      fbSetString("/ident/available", "ON");
+    }else{
+      fbSetString("/ident/available", "OFF");
+    }
+    // Serial.printf("Set bool... %s\n", Firebase.RTDB.setBool(&fbdo, "/ident/available", identOK) ? "ok" : fbdo.errorReason().c_str());
+  }
+
+  
+  lastIdent = identOK;
+
+
+  delay(100);
+}
+
+
+void fbSetString(String dir, String value){
+  if(Firebase.RTDB.setString(&fbdo, dir, value )){
+    Serial.println(dir + " has been set to " + value + " !");
+  }else{
+    Serial.println(fbdo.errorReason().c_str());
   }
 }
