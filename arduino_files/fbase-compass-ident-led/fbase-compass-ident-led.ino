@@ -37,7 +37,8 @@ void setup() {
 
   Serial.begin(9600);
 
-
+  pinMode(LED_BUILTIN, OUTPUT);  // Atur LED bawaan sebagai output
+  blinkOut(LED_BUILTIN, 1, 250);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
 
@@ -72,6 +73,9 @@ void setup() {
 
   // Or use legacy authenticate method
   // Firebase.begin(DATABASE_URL, DATABASE_SECRET);
+  blinkOut(LED_BUILTIN, 3, 500);
+
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void loop() {
@@ -84,7 +88,7 @@ void loop() {
     if (serialData.indexOf("ident") > -1) {
       Serial.println("Ident On");
       lastIdentTime = millis();
-      identOK = true;
+      identOK = true;      
     }
   }
   delay(100);
@@ -92,20 +96,21 @@ void loop() {
   if (identOK == true) {
     if (millis() - lastIdentTime >= timeoutSeconds * 1000) {
       Serial.println("Ident Off");
-      identOK = false;      
+      identOK = false;
     }
   }
 
-  if(lastIdent != identOK){
-    if(identOK){
+  if (lastIdent != identOK) {
+    if (identOK) {
+      digitalWrite(LED_BUILTIN, LOW);
       fbSetString("/ident/available", "ON");
-    }else{
+    } else {
+      digitalWrite(LED_BUILTIN, HIGH);
       fbSetString("/ident/available", "OFF");
     }
     // Serial.printf("Set bool... %s\n", Firebase.RTDB.setBool(&fbdo, "/ident/available", identOK) ? "ok" : fbdo.errorReason().c_str());
-  }
+  } 
 
-  
   lastIdent = identOK;
 
 
@@ -113,10 +118,19 @@ void loop() {
 }
 
 
-void fbSetString(String dir, String value){
-  if(Firebase.RTDB.setString(&fbdo, dir, value )){
+void fbSetString(String dir, String value) {
+  if (Firebase.RTDB.setString(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + value + " !");
-  }else{
+  } else {
     Serial.println(fbdo.errorReason().c_str());
+  }
+}
+
+void blinkOut(int ledpin, int freq, int delayms){
+  for(int i=0; i<freq; i++){
+    digitalWrite(ledpin, HIGH);
+    delay(delayms);
+    digitalWrite(ledpin, LOW);
+    delay(delayms);
   }
 }
