@@ -15,7 +15,7 @@
 #define WIFI_PASSWORD "1DEAlist"
 
 /* 2. Define the RTDB URL */
-#define DATABASE_URL "pendeteksi01.firebaseio.com"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
+#define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
 
 /* 3. Define the Firebase Data object */
 FirebaseData fbdo;
