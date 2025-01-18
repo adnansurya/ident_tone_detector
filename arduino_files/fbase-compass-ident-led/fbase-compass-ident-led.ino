@@ -16,7 +16,12 @@
 #define WIFI_PASSWORD "1DEAlist"
 
 /* 2. Define the RTDB URL */
-#define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
+#define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+
+#define offlinePin D5
+#define identPin D6
+#define statusPin D7
 
 
 QMC5883LCompass compass;
@@ -30,6 +35,7 @@ FirebaseAuth auth;
 /* Define the FirebaseConfig data for config data */
 FirebaseConfig config;
 
+bool pcConnected = false;
 bool identOK = false;
 bool lastIdent = false;
 
@@ -45,7 +51,15 @@ void setup() {
   compass.init();
 
   pinMode(LED_BUILTIN, OUTPUT);  // Atur LED bawaan sebagai output
+  pinMode(offlinePin, OUTPUT);
+  pinMode(identPin, OUTPUT);
+  pinMode(statusPin, OUTPUT);
+
+  digitalWrite(offlinePin, HIGH);
+  digitalWrite(identPin, LOW);
+  digitalWrite(statusPin, LOW);
   blinkOut(LED_BUILTIN, 1, 250);
+  blinkOut(statusPin, 1, 250);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
 
@@ -78,14 +92,37 @@ void setup() {
   /* Initialize the library with the Firebase authen and config */
   Firebase.begin(&config, &auth);
 
+
   // Or use legacy authenticate method
   // Firebase.begin(DATABASE_URL, DATABASE_SECRET);
   blinkOut(LED_BUILTIN, 3, 500);
+  blinkOut(statusPin, 3, 500);
 
   digitalWrite(LED_BUILTIN, HIGH);
+
 }
 
 void loop() {
+
+  if (Serial.available() > 0) {
+    String serialData = Serial.readStringUntil('\n');
+    serialData.trim();
+    Serial.print("Received Text: ");
+    Serial.println(serialData);
+    if (serialData.indexOf("ident") > -1) {
+      Serial.println("Ident On");
+      lastIdentTime = millis();
+      identOK = true;
+      blinkOut(identPin, 1, 250);
+    }
+
+    if (serialData.indexOf("ready") > -1) {
+      digitalWrite(offlinePin, LOW);
+      pcConnected = true;
+    }
+  }
+  delay(100);
+
 
   // Read compass values
   compass.read();
@@ -97,24 +134,11 @@ void loop() {
   Serial.print(az);
   Serial.println();
 
-  if(az != lastAz){
+  if (az != lastAz) {
     fbSetInt("/azimuth", az);
   }
 
   delay(50);
-
-  if (Serial.available() > 0) {
-    String serialData = Serial.readStringUntil('\n');
-    serialData.trim();
-    Serial.print("Received Text: ");
-    Serial.println(serialData);
-    if (serialData.indexOf("ident") > -1) {
-      Serial.println("Ident On");
-      lastIdentTime = millis();
-      identOK = true;
-    }
-  }
-  delay(100);
 
   if (identOK == true) {
     if (millis() - lastIdentTime >= timeoutSeconds * 1000) {
@@ -126,12 +150,19 @@ void loop() {
   if (lastIdent != identOK) {
     if (identOK) {
       digitalWrite(LED_BUILTIN, LOW);
-      fbSetString("/ident", "ON");
+      digitalWrite(statusPin, HIGH);
+      if (pcConnected) {
+        fbSetString("/ident", "ON");
+      }
+
     } else {
       digitalWrite(LED_BUILTIN, HIGH);
-      fbSetString("/ident", "OFF");
+      digitalWrite(statusPin, LOW);
+      if (pcConnected) {
+        fbSetString("/ident", "OFF");
+      }
+
     }
-    // Serial.printf("Set bool... %s\n", Firebase.RTDB.setBool(&fbdo, "/ident/available", identOK) ? "ok" : fbdo.errorReason().c_str());
   }
 
   lastIdent = identOK;
@@ -144,16 +175,20 @@ void loop() {
 void fbSetString(String dir, String value) {
   if (Firebase.RTDB.setString(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + value + " !");
+    blinkOut(statusPin, 1, 100);
   } else {
     Serial.println(fbdo.errorReason().c_str());
+    blinkOut(offlinePin, 2, 500);
   }
 }
 
 void fbSetInt(String dir, int value) {
   if (Firebase.RTDB.setInt(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + String(value) + " !");
+    blinkOut(statusPin, 1, 100);
   } else {
     Serial.println(fbdo.errorReason().c_str());
+    blinkOut(offlinePin, 2, 500);
   }
 }
 
