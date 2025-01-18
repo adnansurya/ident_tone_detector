@@ -99,7 +99,6 @@ void setup() {
   blinkOut(statusPin, 3, 500);
 
   digitalWrite(LED_BUILTIN, HIGH);
-
 }
 
 void loop() {
@@ -113,7 +112,7 @@ void loop() {
       Serial.println("Ident On");
       lastIdentTime = millis();
       identOK = true;
-      blinkOut(identPin, 1, 250);
+      blinkOut(identPin, 1, 50);
     }
 
     if (serialData.indexOf("ready") > -1) {
@@ -148,20 +147,17 @@ void loop() {
   }
 
   if (lastIdent != identOK) {
-    if (identOK) {
-      digitalWrite(LED_BUILTIN, LOW);
+    if (identOK) {      
       digitalWrite(statusPin, HIGH);
       if (pcConnected) {
         fbSetString("/ident", "ON");
       }
 
     } else {
-      digitalWrite(LED_BUILTIN, HIGH);
       digitalWrite(statusPin, LOW);
       if (pcConnected) {
         fbSetString("/ident", "OFF");
       }
-
     }
   }
 
@@ -175,6 +171,8 @@ void loop() {
 void fbSetString(String dir, String value) {
   if (Firebase.RTDB.setString(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + value + " !");
+    blinkOut(LED_BUILTIN, 1, 250);
+    digitalWrite(LED_BUILTIN, HIGH);
   } else {
     Serial.println(fbdo.errorReason().c_str());
     blinkOut(offlinePin, 2, 500);
@@ -184,6 +182,8 @@ void fbSetString(String dir, String value) {
 void fbSetInt(String dir, int value) {
   if (Firebase.RTDB.setInt(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + String(value) + " !");
+    blinkOut(LED_BUILTIN, 1, 250);
+    digitalWrite(LED_BUILTIN, HIGH);
   } else {
     Serial.println(fbdo.errorReason().c_str());
     blinkOut(offlinePin, 2, 500);
