@@ -175,7 +175,6 @@ void loop() {
 void fbSetString(String dir, String value) {
   if (Firebase.RTDB.setString(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + value + " !");
-    blinkOut(statusPin, 1, 100);
   } else {
     Serial.println(fbdo.errorReason().c_str());
     blinkOut(offlinePin, 2, 500);
@@ -185,7 +184,6 @@ void fbSetString(String dir, String value) {
 void fbSetInt(String dir, int value) {
   if (Firebase.RTDB.setInt(&fbdo, dir, value)) {
     Serial.println(dir + " has been set to " + String(value) + " !");
-    blinkOut(statusPin, 1, 100);
   } else {
     Serial.println(fbdo.errorReason().c_str());
     blinkOut(offlinePin, 2, 500);
