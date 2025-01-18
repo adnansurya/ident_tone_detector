@@ -85,6 +85,7 @@ def main():
 
     try:
         with serial.Serial(ch340_port, 9600) as ser:
+            ser.write(b'ready\n') 
             monitor_microphone(ser)
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
