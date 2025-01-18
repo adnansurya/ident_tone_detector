@@ -5,6 +5,7 @@
 #include <ESP8266WiFi.h>
 #endif
 
+#include <QMC5883LCompass.h>
 #include <Firebase_ESP_Client.h>
 
 // Provide the RTDB payload printing info and other helper functions.
@@ -16,6 +17,9 @@
 
 /* 2. Define the RTDB URL */
 #define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
+
+
+QMC5883LCompass compass;
 
 /* 3. Define the Firebase Data object */
 FirebaseData fbdo;
@@ -32,10 +36,13 @@ bool lastIdent = false;
 unsigned long timeoutSeconds = 10;
 unsigned long lastIdentTime = 0;
 
+int az, lastAz;
+
 
 void setup() {
 
   Serial.begin(9600);
+  compass.init();
 
   pinMode(LED_BUILTIN, OUTPUT);  // Atur LED bawaan sebagai output
   blinkOut(LED_BUILTIN, 1, 250);
@@ -80,6 +87,22 @@ void setup() {
 
 void loop() {
 
+  // Read compass values
+  compass.read();
+
+  // Return Azimuth reading
+  az = compass.getAzimuth();
+
+  Serial.print("A: ");
+  Serial.print(az);
+  Serial.println();
+
+  if(az != lastAz){
+    fbSetInt("/azimuth", az);
+  }
+
+  delay(50);
+
   if (Serial.available() > 0) {
     String serialData = Serial.readStringUntil('\n');
     serialData.trim();
@@ -88,7 +111,7 @@ void loop() {
     if (serialData.indexOf("ident") > -1) {
       Serial.println("Ident On");
       lastIdentTime = millis();
-      identOK = true;      
+      identOK = true;
     }
   }
   delay(100);
@@ -103,16 +126,16 @@ void loop() {
   if (lastIdent != identOK) {
     if (identOK) {
       digitalWrite(LED_BUILTIN, LOW);
-      fbSetString("/ident/available", "ON");
+      fbSetString("/ident", "ON");
     } else {
       digitalWrite(LED_BUILTIN, HIGH);
-      fbSetString("/ident/available", "OFF");
+      fbSetString("/ident", "OFF");
     }
     // Serial.printf("Set bool... %s\n", Firebase.RTDB.setBool(&fbdo, "/ident/available", identOK) ? "ok" : fbdo.errorReason().c_str());
-  } 
+  }
 
   lastIdent = identOK;
-
+  lastAz = az;
 
   delay(100);
 }
@@ -126,8 +149,16 @@ void fbSetString(String dir, String value) {
   }
 }
 
-void blinkOut(int ledpin, int freq, int delayms){
-  for(int i=0; i<freq; i++){
+void fbSetInt(String dir, int value) {
+  if (Firebase.RTDB.setInt(&fbdo, dir, value)) {
+    Serial.println(dir + " has been set to " + String(value) + " !");
+  } else {
+    Serial.println(fbdo.errorReason().c_str());
+  }
+}
+
+void blinkOut(int ledpin, int freq, int delayms) {
+  for (int i = 0; i < freq; i++) {
     digitalWrite(ledpin, HIGH);
     delay(delayms);
     digitalWrite(ledpin, LOW);
