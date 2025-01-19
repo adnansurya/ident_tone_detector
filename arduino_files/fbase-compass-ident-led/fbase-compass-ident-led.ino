@@ -95,7 +95,6 @@ void setup() {
 
   // Or use legacy authenticate method
   // Firebase.begin(DATABASE_URL, DATABASE_SECRET);
-  blinkOut(LED_BUILTIN, 3, 500);
   blinkOut(statusPin, 3, 500);
 
   digitalWrite(LED_BUILTIN, HIGH);
@@ -128,6 +127,12 @@ void loop() {
 
   // Return Azimuth reading
   az = compass.getAzimuth();
+
+  if(az < 0){
+    az = abs(az);
+  }else if(az > 0){
+    az = 360 - az;
+  }
 
   Serial.print("A: ");
   Serial.print(az);
