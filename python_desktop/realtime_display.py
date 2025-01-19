@@ -14,9 +14,12 @@ def fetch_data():
     try:
         ref = db.reference("/")  # Path root database
         data = ref.get()
-        if data:
-            azimuth_value.set(str(data.get("azimuth", "N/A")) + " °")
+        if data:            
             ident_value.set(data.get("ident", "N/A"))
+            if data.get("ident", "N/A") == "OFF":
+                azimuth_value.set("OFF")
+            else:
+                azimuth_value.set(str(data.get("azimuth", "N/A")) + " °")
         else:
             azimuth_value.set("N/A")
             ident_value.set("N/A")
@@ -52,9 +55,6 @@ ident_value = tk.StringVar(value="Loading...")
 ident_label = tk.Label(frame, textvariable=ident_value, font=("Helvetica", 14), fg="yellow", bg="#34495e")
 ident_label.grid(row=1, column=1, sticky="e", padx=10, pady=10)
 
-# Tombol Keluar
-exit_button = tk.Button(root, text="Exit", font=("Helvetica", 12), bg="#e74c3c", fg="white", command=root.quit)
-exit_button.pack(pady=5)
 
 # Mulai mengambil data secara periodik
 fetch_data()
