@@ -12,8 +12,8 @@
 #include <addons/RTDBHelper.h>
 
 /* 1. Define the WiFi credentials */
-#define WIFI_SSID "MIKRO"
-#define WIFI_PASSWORD "1DEAlist"
+#define WIFI_SSID "MUH ASRIANTO"
+#define WIFI_PASSWORD "As030793"
 
 /* 2. Define the RTDB URL */
 #define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"

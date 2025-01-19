@@ -15,7 +15,7 @@ def fetch_data():
         ref = db.reference("/")  # Path root database
         data = ref.get()
         if data:
-            azimuth_value.set(data.get("azimuth", "N/A"))
+            azimuth_value.set(str(data.get("azimuth", "N/A")) + " °")
             ident_value.set(data.get("ident", "N/A"))
         else:
             azimuth_value.set("N/A")
@@ -28,7 +28,7 @@ def fetch_data():
 
 # Aplikasi Desktop Tkinter
 root = tk.Tk()
-root.title("Firebase RTDB Monitor")
+root.title("Ident Azimuth Monitor")
 root.geometry("400x300")
 root.configure(bg="#2c3e50")
 
