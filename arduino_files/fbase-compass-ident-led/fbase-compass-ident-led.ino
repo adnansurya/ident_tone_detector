@@ -18,11 +18,9 @@
 /* 2. Define the RTDB URL */
 #define DATABASE_URL "azimuth-360-default-rtdb.asia-southeast1.firebasedatabase.app"
 
-
 #define offlinePin D5
 #define identPin D6
 #define statusPin D7
-
 
 QMC5883LCompass compass;
 
@@ -43,7 +41,6 @@ unsigned long timeoutSeconds = 10;
 unsigned long lastIdentTime = 0;
 
 int az, lastAz;
-
 
 void setup() {
 
@@ -85,16 +82,11 @@ void setup() {
   // Comment or pass false value when WiFi reconnection will control by your code or third party library e.g. WiFiManager
   Firebase.reconnectNetwork(true);
 
-  // Since v4.4.x, BearSSL engine was used, the SSL buffer need to be set.
-  // Large data transmission may require larger RX buffer, otherwise connection issue or data read time out can be occurred.
   fbdo.setBSSLBufferSize(4096 /* Rx buffer size in bytes from 512 - 16384 */, 1024 /* Tx buffer size in bytes from 512 - 16384 */);
 
   /* Initialize the library with the Firebase authen and config */
   Firebase.begin(&config, &auth);
 
-
-  // Or use legacy authenticate method
-  // Firebase.begin(DATABASE_URL, DATABASE_SECRET);
   blinkOut(statusPin, 3, 500);
 
   digitalWrite(LED_BUILTIN, HIGH);
@@ -120,7 +112,6 @@ void loop() {
     }
   }
   delay(100);
-
 
   // Read compass values
   compass.read();
@@ -171,7 +162,6 @@ void loop() {
 
   delay(100);
 }
-
 
 void fbSetString(String dir, String value) {
   if (Firebase.RTDB.setString(&fbdo, dir, value)) {
